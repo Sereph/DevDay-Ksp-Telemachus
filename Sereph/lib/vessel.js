@@ -5,10 +5,10 @@ define(['./api'], function (api) {
         },
         throttle: {
             get: function (callback) {
-                api.command('f.throttle',callback);
+                api.command('f.throttle', callback);
             },
             set: function (value) {
-                api.command('f.setThrottle['+value+']');
+                api.command('f.setThrottle[' + value + ']');
             },
             up: function () {
                 api.command('f.throttleUp');
@@ -23,27 +23,33 @@ define(['./api'], function (api) {
                 api.command('f.throttleZero');
             }
         },
-        attitude:{
-            pitch:{
+        attitude: {
+            pitch: {
                 set: function (value) {
-                    api.command('v.setPitch['+value+']');
+                    api.command('v.setPitch[' + value + ']');
                 }
             },
-            roll:{
+            roll: {
                 set: function (value) {
-                    api.command('v.setRoll['+value+']');
+                    api.command('v.setRoll[' + value + ']');
                 }
             },
-            yaw:{
+            yaw: {
                 set: function (value) {
-                    api.command('v.setYaw['+value+']');
+                    api.command('v.setYaw[' + value + ']');
                 }
             },
-            flyByWire:{
-                on:function () {
+            set: function (pitch, yaw, roll) {
+                api.command('v.setAttitude[' + pitch + ',' + yaw + ',' + roll + ']');
+            },
+            setTranslastion: function (x, y, z) {
+                api.command('v.setTranslation[' + x + ',' + y + ',' + z + ']');
+            },
+            flyByWire: {
+                on: function () {
                     api.command('v.setFbW[1]');
                 },
-                off:function () {
+                off: function () {
                     api.command('v.setFbW[0]');
                 }
             }
