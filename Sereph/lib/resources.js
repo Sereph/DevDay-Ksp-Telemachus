@@ -1,8 +1,8 @@
 define([], function () {
     return {
-        liquidFuel: '',
-        oxidiser: '',
-        monoProp:'',
-        solidFuel:''
+        liquidFuel: 'LiquidFuel',
+        oxidizer: 'Oxidizer',
+        monoProp:'MonoPropellant',
+        solidFuel:'SolidFuel'
     }
 });
