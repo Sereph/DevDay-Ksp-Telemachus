@@ -19,24 +19,84 @@ define(['./api'], function (api) {
         api.command('f.throttleFull');
     }
 
-    function toggleRcs() {
+    function rcsToggle() {
         api.toggle('f.rcs');
     }
 
-    function toggleSas() {
+    function rcsOn() {
+        api.toggle('f.rcs[true]');
+    }
+
+    function rcsOff() {
+        api.toggle('f.rcs[false]');
+    }
+
+    function getRcs(callback) {
+        api.command('v.rcsValue', callback);
+    }
+
+    function sasToggle() {
         api.toggle('f.sas');
     }
 
-    function toggleLights() {
+    function sasOn() {
+        api.toggle('f.sas[true]');
+    }
+
+    function sasOff() {
+        api.toggle('f.sas[false]');
+    }
+
+    function getSas(callback) {
+        api.command('v.sasValue', callback);
+    }
+
+    function lightsToggle() {
         api.toggle('f.light');
     }
 
-    function toggleLandingGear() {
+    function lightsOn() {
+        api.toggle('f.light[true]');
+    }
+
+    function lightsOff() {
+        api.toggle('f.light[false]');
+    }
+
+    function getLights(callback) {
+        api.command('v.lightValue', callback);
+    }
+
+    function landingGearToggle() {
         api.toggle('f.gear');
+    }
+
+    function landingGearDown() {
+        api.toggle('f.gear[true]');
+    }
+
+    function landingGearUp() {
+        api.toggle('f.gear[false]');
+    }
+
+    function getLandingGear(callback) {
+        api.command('v.gearValue', callback);
     }
 
     function toggleBreaks() {
         api.toggle('f.brake');
+    }
+
+    function breaksOn() {
+        api.toggle('f.brake[true]');
+    }
+
+    function breaksOff() {
+        api.toggle('f.brake[false]');
+    }
+
+    function getBreaks(callback) {
+        api.command('v.brakeValue', callback);
     }
 
     function abort() {
@@ -93,19 +153,34 @@ define(['./api'], function (api) {
         },
         avionics: {
             rcs: {
-                toggle: toggleRcs
+                toggle: rcsToggle,
+                on: rcsOn,
+                off: rcsOff,
+                get: getRcs
             },
             sas: {
-                toggle: toggleSas
+                toggle: sasToggle,
+                on: sasOn,
+                off: sasOff,
+                get: getSas
             },
             lights: {
-                toggle: toggleLights
+                toggle: lightsToggle,
+                on: lightsOn,
+                off: lightsOff,
+                get: getLights
             },
             landingGear: {
-                toggle: toggleLandingGear
+                toggle: landingGearToggle,
+                down: landingGearDown,
+                up: landingGearUp,
+                get: getLandingGear
             },
             breaks: {
-                toggle: toggleBreaks
+                toggle: toggleBreaks,
+                on: breaksOn,
+                off: breaksOff,
+                get: getBreaks
             }
         },
         actionGroups: {
