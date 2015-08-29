@@ -203,6 +203,28 @@ define(['./api', './resources'], function (api, resources) {
             },
             dynamicPressure: function (callback) {
                 api.command('v.dynamicPressure', callback);
+            },
+            velocity: {
+                surface: {
+                    resultant: function (callback) {
+                        api.command('v.surfaceVelocity', callback);
+                    },
+                    x: function (callback) {
+                        api.command('v.surfaceVelocityx', callback);
+                    },
+                    y: function (callback) {
+                        api.command('v.surfaceVelocityy', callback);
+                    },
+                    z: function (callback) {
+                        api.command('v.surfaceVelocityz', callback);
+                    }
+                },
+                angular: function (callback) {
+                    api.command('v.angularVelocity', callback);
+                },
+                oribital:function (callback) {
+                    api.command('v.orbitalVelocity', callback);
+                }
             }
         },
         resources: {
