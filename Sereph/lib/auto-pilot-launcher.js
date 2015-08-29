@@ -1,6 +1,7 @@
 define(['./vessel'], function (vessel) {
     function launch(){
-        vessel.stage();
+        vessel.attitude.flyByWire.on();
+        vessel.attitude.yaw.set(0);
     }
     return {
         launch: launch

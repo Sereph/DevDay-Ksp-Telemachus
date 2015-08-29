@@ -23,6 +23,31 @@ define(['./api'], function (api) {
                 api.command('f.throttleZero');
             }
         },
+        attitude:{
+            pitch:{
+                set: function (value) {
+                    api.command('v.setPitch['+value+']');
+                }
+            },
+            roll:{
+                set: function (value) {
+                    api.command('v.setRoll['+value+']');
+                }
+            },
+            yaw:{
+                set: function (value) {
+                    api.command('v.setYaw['+value+']');
+                }
+            },
+            flyByWire:{
+                on:function () {
+                    api.command('v.setFbW[1]');
+                },
+                off:function () {
+                    api.command('v.setFbW[0]');
+                }
+            }
+        },
         avionics: {
             rcs: {
                 toggle: function () {
