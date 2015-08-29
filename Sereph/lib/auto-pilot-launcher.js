@@ -1,7 +1,10 @@
-define(['./vessel'], function (vessel) {
+define(['./vessel','./world'], function (vessel, world) {
     function launch(){
-        vessel.attitude.flyByWire.on();
-        vessel.attitude.yaw.set(0);
+        //setInterval(function(){
+        //    vessel.situation.distanceToPeriapsis(function(response){
+        //        console.log(response);
+        //    });
+        //},1000);
     }
     return {
         launch: launch

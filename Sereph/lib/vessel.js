@@ -163,6 +163,24 @@ define(['./api'], function (api) {
             10: function () {
                 api.toggle('f.ag10');
             }
+        },
+        situation:{
+            periapsis:{
+                height: function(callback){
+                    api.command('o.PeA', callback);
+                },
+                timeTo:function(callback){
+                    api.command('o.timeToPe', callback);
+                }
+            },
+            apoapsis{
+                height: function(callback){
+                    api.command('o.ApA', callback);
+                },
+                timeTo:function(callback){
+                    api.command('o.timeToAp', callback);
+                }
+            },
         }
     }
 });
