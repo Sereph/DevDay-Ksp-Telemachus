@@ -6,8 +6,11 @@
         }
     });
 
-    requirejs(['./auto-pilot-launcher'],function(autoPilotLauncher){
-        console.log("hiya");
-        console.log(autoPilotLauncher);
+    requirejs(['./auto-pilot-launcher', 'jquery'],function(autoPilotLauncher, $){
+        $(document).ready(function(){
+            $(document).on('click', '#launch-button', function(event){
+                autoPilotLauncher.launch();
+            })
+        })
     });
 })();
