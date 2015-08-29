@@ -12,6 +12,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "require": "*"
+    "require": "*",
+    "moment": "2.10.6"
   }
 }
