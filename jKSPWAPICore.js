@@ -251,7 +251,7 @@ var jKSPWAPI = {
             postUpdate(d);
         };
 
-        $.get("datalink?" + APIString, callback).error(function () {
+        $.get("/telemachus/datalink?" + APIString, callback).error(function () {
             jKSPWAPI.log("Command failed: " + APIString);
             d.ret = 4;
             postUpdate(d);
