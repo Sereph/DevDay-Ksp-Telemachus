@@ -10,5 +10,8 @@
   "moduleType": [
     "amd"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "require": "*"
+  }
 }
