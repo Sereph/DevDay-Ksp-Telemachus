@@ -1,4 +1,4 @@
-define(['./api'], function (api) {
+define(['./api','./resources'], function (api,resources) {
     return {
         stage: function () {
             api.command('f.stage');
@@ -42,7 +42,7 @@ define(['./api'], function (api) {
             set: function (pitch, yaw, roll) {
                 api.command('v.setAttitude[' + pitch + ',' + yaw + ',' + roll + ']');
             },
-            setAttitudeAndTranslation:function(pitch, yaw, roll,x, y, z){
+            setAttitudeAndTranslation: function (pitch, yaw, roll, x, y, z) {
                 api.command('v.setPitchYawRollXYZ[' + pitch + ',' + yaw + ',' + roll + ',' + x + ',' + y + ',' + z + ']');
             },
             setTranslastion: function (x, y, z) {
@@ -164,23 +164,51 @@ define(['./api'], function (api) {
                 api.toggle('f.ag10');
             }
         },
-        situation:{
-            periapsis:{
-                height: function(callback){
+        situation: {
+            periapsis: {
+                height: function (callback) {
                     api.command('o.PeA', callback);
                 },
-                timeTo:function(callback){
+                timeTo: function (callback) {
                     api.command('o.timeToPe', callback);
                 }
             },
-            apoapsis{
-                height: function(callback){
+            apoapsis: {
+                height: function (callback) {
                     api.command('o.ApA', callback);
                 },
-                timeTo:function(callback){
+                timeTo: function (callback) {
                     api.command('o.timeToAp', callback);
                 }
             },
+            altitude: function (callback) {
+                api.command('v.altitude', callback);
+            },
+            heightAboveTerrain: function (callback) {
+                api.command('v.heightFromTerrain', callback);
+            },
+            atmosphericDensity:function(callback){
+                api.command('v.atmosphericDensity', callback);
+            },
+            dynamicPressure:function(callback){
+                api.command('v.dynamicPressure', callback);
+            }
+        },
+        resources:{
+            liquidFuel:{
+                current:function(callback){
+                    api.command('r.resource['+resources.liquidFuel+']', callback);
+                },
+                max:function(callback){
+                    api.command('r.resourceMax['+resources.liquidFuel+']', callback);
+                },
+                stage:function(callback){
+                    api.command('r.resourceCurrent['+resources.liquidFuel+']', callback);
+                },
+                stageMax:function(callback){
+                    api.command('r.resourceCurrentMax['+resources.liquidFuel+']', callback);
+                }
+            }
         }
     }
 });
