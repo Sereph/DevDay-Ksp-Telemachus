@@ -42,6 +42,9 @@ define(['./api'], function (api) {
             set: function (pitch, yaw, roll) {
                 api.command('v.setAttitude[' + pitch + ',' + yaw + ',' + roll + ']');
             },
+            setAttitudeAndTranslation:function(pitch, yaw, roll,x, y, z){
+                api.command('v.setPitchYawRollXYZ[' + pitch + ',' + yaw + ',' + roll + ',' + x + ',' + y + ',' + z + ']');
+            },
             setTranslastion: function (x, y, z) {
                 api.command('v.setTranslation[' + x + ',' + y + ',' + z + ']');
             },
