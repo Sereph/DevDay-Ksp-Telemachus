@@ -1,11 +1,8 @@
 define([], function () {
     function command(command, callback) {
-        jKSPWAPI.call("ret=" + command, function (d) {
-            if (d.ret > 0) {
-                jKSPWAPI.generateNotificationWithCode(d.ret);
-            }
+        jKSPWAPI.call("ret=" + command, function (result) {
             if(callback){
-                callback(d.ret);
+                callback(null, result.ret);
             }
         });
     }
