@@ -1,4 +1,4 @@
-define(['./api','./resources'], function (api,resources) {
+define(['./api', './resources'], function (api, resources) {
     return {
         stage: function () {
             api.command('f.stage');
@@ -27,11 +27,17 @@ define(['./api','./resources'], function (api,resources) {
             pitch: {
                 set: function (value) {
                     api.command('v.setPitch[' + value + ']');
+                },
+                get: function (callback) {
+                    api.command('n.pitch2', callback);
                 }
             },
             roll: {
                 set: function (value) {
                     api.command('v.setRoll[' + value + ']');
+                },
+                get: function (callback) {
+                    api.command('n.roll2', callback);
                 }
             },
             yaw: {
@@ -54,6 +60,11 @@ define(['./api','./resources'], function (api,resources) {
                 },
                 off: function () {
                     api.command('v.setFbW[0]');
+                }
+            },
+            heading: {
+                get: function (callback) {
+                    api.command('n.heading2', callback);
                 }
             }
         },
@@ -187,26 +198,26 @@ define(['./api','./resources'], function (api,resources) {
             heightAboveTerrain: function (callback) {
                 api.command('v.heightFromTerrain', callback);
             },
-            atmosphericDensity:function(callback){
+            atmosphericDensity: function (callback) {
                 api.command('v.atmosphericDensity', callback);
             },
-            dynamicPressure:function(callback){
+            dynamicPressure: function (callback) {
                 api.command('v.dynamicPressure', callback);
             }
         },
-        resources:{
-            liquidFuel:{
-                current:function(callback){
-                    api.command('r.resource['+resources.liquidFuel+']', callback);
+        resources: {
+            liquidFuel: {
+                current: function (callback) {
+                    api.command('r.resource[' + resources.liquidFuel + ']', callback);
                 },
-                max:function(callback){
-                    api.command('r.resourceMax['+resources.liquidFuel+']', callback);
+                max: function (callback) {
+                    api.command('r.resourceMax[' + resources.liquidFuel + ']', callback);
                 },
-                stage:function(callback){
-                    api.command('r.resourceCurrent['+resources.liquidFuel+']', callback);
+                stage: function (callback) {
+                    api.command('r.resourceCurrent[' + resources.liquidFuel + ']', callback);
                 },
-                stageMax:function(callback){
-                    api.command('r.resourceCurrentMax['+resources.liquidFuel+']', callback);
+                stageMax: function (callback) {
+                    api.command('r.resourceCurrentMax[' + resources.liquidFuel + ']', callback);
                 }
             }
         }
