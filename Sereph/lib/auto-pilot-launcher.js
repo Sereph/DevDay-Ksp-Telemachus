@@ -36,13 +36,14 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
             vessel.attitude.yaw.set(yaw);
             console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<'+results.angularVelocity+'>');
             if(yaw === 0){
-                return setTimeout(monitorGravityTurn, 300);
+                return setTimeout(monitorGravityTurn, 400);
             }
-            setTimeout(monitorGravityTurn, 100);
+            setTimeout(monitorGravityTurn, 200);
         });
     }
 
     function getGravityManouver(pitch, idealAscentAngle, angularVelocity) {
+        //todo needs to return the mangnitude and duration not just magnitude
         if(angularVelocity > 0.020){
             console.info("avoiding spin");
             return 0;
