@@ -1,11 +1,12 @@
 define(['./vessel', './world', '../bower_components/async/dist/async.js'], function (vessel, world, async) {
     function launch() {
+        //limitThrottleToTerminalVelocity();
+
         vessel.attitude.flyByWire.on();
-        vessel.attitude.set(90,0,0);
+        vessel.attitude.set(0, 0, 0);
         vessel.throttle.full();
         vessel.stage();
-        //limitThrottleToTerminalVelocity();
-        executeGravityTurn();
+        monitorGravityTurn();
     }
 
     function limitThrottleToTerminalVelocity() {
@@ -19,61 +20,117 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
         }, 1000);
     }
 
-    function executeGravityTurn() {
+    function monitorGravityTurn() {
         async.parallel({
-            altitude: vessel.situation.altitude,
             velocity: vessel.situation.velocity.surface.resultant,
-            pitch: vessel.attitude.pitch.get
+            pitch: vessel.attitude.pitch.get,
+            apoapsis: vessel.situation.apoapsis.height,
+            angularVelocity: vessel.situation.velocity.angular
         }, function (error, results) {
-            console.log('results : ' + JSON.stringify(results));
             if (results.velocity < 100) {
                 // not yet at 100 m/s
-                return setTimeout(executeGravityTurn, 500);
+                return setTimeout(monitorGravityTurn, 500);
             }
-            var newPitch = getBestPitchForAltitude(results.altitude, results.pitch);
-            console.log('New Pitch :' + newPitch);
-            vessel.attitude.pitch.set(newPitch);
-            setTimeout(executeGravityTurn, 500);
+            var idealAscentAngle = 10;// getIdealAscentAngle(results.apoapsis);
+            var yaw = getGravityManouver(results.pitch, idealAscentAngle, results.angularVelocity);
+            vessel.attitude.yaw.set(yaw);
+            console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<'+results.angularVelocity+'>');
+            if(yaw === 0){
+                return setTimeout(monitorGravityTurn, 300);
+            }
+            setTimeout(monitorGravityTurn, 100);
         });
     }
 
-    function getBestPitchForAltitude(altitude, pitch) {
-        // start 90deg ~ arround 0 altitude, end 0 deg
+    function getGravityManouver(pitch, idealAscentAngle, angularVelocity) {
+        if(angularVelocity > 0.020){
+            console.info("avoiding spin");
+            return 0;
+        }
+        var diff = Math.abs(pitch - idealAscentAngle);
+        var magnitude = diff / 10;
+        var maxPitch = 0.1;
+        if (magnitude > maxPitch) {
+            magnitude = maxPitch;
+        }
+        if (pitch > idealAscentAngle) {
+            //we are pointing higher up than ideal
+            return magnitude;
+        }
+        //we are pointing lower than ideal
+        return (magnitude * -1);
+    }
+
+    function getIdealAscentAngle(apoapsis) {
+        // start 90deg ~ arround 0 apoapsis, end 0 deg
         // don't increase pitch more than current pitch + x to prevent flips
-        var idealPitch;
-        if (altitude < 1000) {
-            idealPitch = 89;
-        } else if (altitude < 2000) {
-            idealPitch = 88;
+        var idealAscentAngle;
+        if (apoapsis < 1000) {
+            idealAscentAngle = 89;
+        } else if (apoapsis < 2000) {
+            idealAscentAngle = 88;
         }
-        else if (altitude < 3000) {
-            idealPitch = 87;
+        else if (apoapsis < 3000) {
+            idealAscentAngle = 87;
         }
-        else if (altitude < 4000) {
-            idealPitch = 86;
+        else if (apoapsis < 4000) {
+            idealAscentAngle = 86;
         }
-        else if (altitude < 5000) {
-            idealPitch = 85;
+        else if (apoapsis < 5000) {
+            idealAscentAngle = 85;
         }
-        else if (altitude < 6000) {
-            idealPitch = 84;
+        else if (apoapsis < 6000) {
+            idealAscentAngle = 84;
         }
-        else if (altitude < 7000) {
-            idealPitch = 83;
+        else if (apoapsis < 7000) {
+            idealAscentAngle = 83;
         }
-        else if (altitude < 8000) {
-            idealPitch = 82;
+        else if (apoapsis < 8000) {
+            idealAscentAngle = 82;
         }
-        else if (altitude < 9000) {
-            idealPitch = 81;
+        else if (apoapsis < 9000) {
+            idealAscentAngle = 81;
         }
-        else if (altitude < 10000) {
-            idealPitch = 80;
+        else if (apoapsis < 10000) {
+            idealAscentAngle = 80;
         }
-        var safetyNumber = 3;
-        if (pitch - idealPitch > safetyNumber) {
-            return pitch-safetyNumber;
+        else if (apoapsis < 12000) {
+            idealAscentAngle = 75;
         }
+        else if (apoapsis < 14000) {
+            idealAscentAngle = 70;
+        }
+        else if (apoapsis < 16000) {
+            idealAscentAngle = 65;
+        }
+        else if (apoapsis < 18000) {
+            idealAscentAngle = 60;
+        }
+        else if (apoapsis < 20000) {
+            idealAscentAngle = 55;
+        }
+        else if (apoapsis < 25000) {
+            idealAscentAngle = 40;
+        }
+        else if (apoapsis < 30000) {
+            idealAscentAngle = 35;
+        }
+        else if (apoapsis < 35000) {
+            idealAscentAngle = 30;
+        }
+        else if (apoapsis < 40000) {
+            idealAscentAngle = 25;
+        }
+        else if (apoapsis < 45000) {
+            idealAscentAngle = 15;
+        }
+        else if (apoapsis < 50000) {
+            idealAscentAngle = 10;
+        }
+        else {
+            idealAscentAngle = 5;
+        }
+        return idealAscentAngle
     }
 
     return {

@@ -204,6 +204,9 @@ define(['./api', './resources'], function (api, resources) {
             dynamicPressure: function (callback) {
                 api.command('v.dynamicPressure', callback);
             },
+            angleToPrograde:function(callback){
+                api.command('v.angleToPrograde',callback);
+            },
             velocity: {
                 surface: {
                     resultant: function (callback) {
