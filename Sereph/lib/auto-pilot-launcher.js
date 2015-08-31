@@ -33,33 +33,36 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
             }
             var idealAscentAngle = 10;// getIdealAscentAngle(results.apoapsis);
             var yaw = getGravityManouver(results.pitch, idealAscentAngle, results.angularVelocity);
-            vessel.attitude.yaw.set(yaw);
-            console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<'+results.angularVelocity+'>');
-            if(yaw === 0){
-                return setTimeout(monitorGravityTurn, 400);
-            }
-            setTimeout(monitorGravityTurn, 200);
+            vessel.attitude.yaw.set(yaw.magnitude);
+            console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<' + results.angularVelocity + '>');
+            setTimeout(monitorGravityTurn, yaw.duration);
         });
     }
 
     function getGravityManouver(pitch, idealAscentAngle, angularVelocity) {
         //todo needs to return the mangnitude and duration not just magnitude
-        if(angularVelocity > 0.020){
+        if (angularVelocity > 0.020) {
             console.info("avoiding spin");
-            return 0;
+            return {
+                magnitude: 0,
+                duration: 500
+            };
         }
         var diff = Math.abs(pitch - idealAscentAngle);
         var magnitude = diff / 10;
-        var maxPitch = 0.1;
-        if (magnitude > maxPitch) {
-            magnitude = maxPitch;
+        var maxMagnitude = 0.1;
+        if (magnitude > maxMagnitude) {
+            magnitude = maxMagnitude;
         }
-        if (pitch > idealAscentAngle) {
-            //we are pointing higher up than ideal
-            return magnitude;
+        if (pitch < idealAscentAngle) {
+            //we are pointing lower than ideal
+            magnitude = (magnitude * -1);
         }
-        //we are pointing lower than ideal
-        return (magnitude * -1);
+        return {
+            magnitude: magnitude,
+            duration: 100
+        }
+
     }
 
     function getIdealAscentAngle(apoapsis) {
