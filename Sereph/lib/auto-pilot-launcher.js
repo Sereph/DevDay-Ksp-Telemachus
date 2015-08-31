@@ -1,6 +1,19 @@
 define(['./vessel', './world', '../bower_components/async/dist/async.js'], function (vessel, world, async) {
     function launch() {
 
+        //setInterval(function(){
+        //    async.parallel({
+        //        heading:vessel.attitude.heading.get,
+        //        pitch:vessel.attitude.pitch.get,
+        //        roll:vessel.attitude.roll.get,
+        //        Vx:vessel.situation.velocity.surface.x,
+        //        Vy:vessel.situation.velocity.surface.y,
+        //        Vz:vessel.situation.velocity.surface.z
+        //    },function(err, results){
+        //        console.info(JSON.stringify(results))
+        //    });
+        //},10000);
+
         vessel.attitude.flyByWire.on();
         vessel.attitude.set(0, 0, 0);
         vessel.throttle.full();
@@ -14,18 +27,18 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
         async.parallel({
             velocity: vessel.situation.velocity.surface.resultant,
             atmosphericDensity: vessel.situation.atmosphericDensity,
-            altitude : vessel.situation.altitude,
+            altitude: vessel.situation.altitude,
             acceleration: vessel.sensors.accelerometer
         }, function (error, results) {
-            var idealAcceleration = getIdealAcceleration(results.altitude,results.velocity);
+            var idealAcceleration = getIdealAcceleration(results.altitude, results.velocity);
             var acceleration = results.acceleration[1][0];
-            var diff = Math.abs(idealAcceleration- acceleration);
-            console.info(JSON.stringify({a:acceleration,i:idealAcceleration, d:diff}));
-            if(acceleration > idealAcceleration){
+            var diff = Math.abs(idealAcceleration - acceleration);
+            //console.info(JSON.stringify({a:acceleration,i:idealAcceleration, d:diff}));
+            if (acceleration > idealAcceleration) {
                 vessel.throttle.down();
                 return setTimeout(setThrottle, 500);
             }
-            if(diff > 0.5){
+            if (diff > 0.5) {
                 vessel.throttle.full();
                 return setTimeout(setThrottle, 1000);
             }
@@ -34,25 +47,25 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
 
         });
     }
-    function getIdealAcceleration(altitude, velocity){
-        if(velocity < 100)
-        {
+
+    function getIdealAcceleration(altitude, velocity) {
+        if (velocity < 100) {
             return 3;
         }
-        if(altitude < 10000){
-            if(velocity > 300){
+        if (altitude < 10000) {
+            if (velocity > 300) {
                 return 1;
             }
             return 1.8;
         }
-        if(altitude < 20000){
-            if(velocity > 800){
+        if (altitude < 20000) {
+            if (velocity > 800) {
                 return 1;
             }
             return 1.6;
         }
-        if(altitude < 25000){
-            if(velocity > 1200){
+        if (altitude < 25000) {
+            if (velocity > 1200) {
                 return 1;
             }
             return 2;
@@ -66,27 +79,55 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js'], funct
             velocity: vessel.situation.velocity.surface.resultant,
             pitch: vessel.attitude.pitch.get,
             apoapsis: vessel.situation.apoapsis.height,
-            angularVelocity: vessel.situation.velocity.angular
+            //angularVelocity: vessel.situation.velocity.angular,
+            heading: vessel.attitude.heading.get,
+            roll: vessel.attitude.roll.get,
+            Vx: vessel.situation.velocity.surface.x,
+            Vy: vessel.situation.velocity.surface.y,
+            Vz: vessel.situation.velocity.surface.z
         }, function (error, results) {
-            if (results.velocity < 100) {
-                // not yet at 100 m/s
-                return setTimeout(monitorGravityTurn, 500);
-            }
-            var idealAscentAngle = 10;// getIdealAscentAngle(results.apoapsis);
-            var yaw = getGravityManouver(results.pitch, idealAscentAngle, results.angularVelocity);
-            vessel.attitude.yaw.set(yaw.magnitude);
-            console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<' + results.angularVelocity + '>');
-            setTimeout(monitorGravityTurn, yaw.duration);
+            //if (results.velocity < 100) {
+            //    return setTimeout(monitorGravityTurn, 500);
+            //}
+            //var idealAscentAngle = getIdealAscentAngle(results.apoapsis);
+            //var yaw = getGravityManouver(results.pitch, idealAscentAngle, results.angularVelocity);
+            //vessel.attitude.yaw.set(yaw.magnitude);
+            //console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<' + results.angularVelocity + '>');
+            //setTimeout(monitorGravityTurn, yaw.duration);
+            var vesselOrientationVector = getVesselOrientation(results.pitch, results.heading);
+            var velocityOrientationVector = getVelocityOrientation(results.vx, results.vy, results.vz)
+            console.info(vesselOrientationVector);
+            setTimeout(monitorGravityTurn, 3000);
         });
     }
 
+    //gets the x,y,z degrees of the vessels orientation
+    function getVesselOrientation(pitch, heading) {
+        /*The api seems to use a different orientation for its vectors, the [] indicate positive:
+         y: [N]-S
+         X: up-[down]
+         z: E-[W]
+         * */
+        return {
+            x: pitch,
+            y: Math.cos(heading),
+            z: Math.sin(heading),
+        }
+    }
+
+    //Take in the velocity vector and calculate the
+    function getVelocityOrientation(x, y, z)
+    {
+        var
+    }
+
     function getGravityManouver(pitch, idealAscentAngle, angularVelocity) {
-        //todo needs to return the mangnitude and duration not just magnitude
-        if (angularVelocity > 0.020) {
+        console.info(angularVelocity);
+        if (angularVelocity > 0.019) {
             console.info("avoiding spin");
             return {
                 magnitude: 0,
-                duration: 500
+                duration: 1250
             };
         }
         var diff = Math.abs(pitch - idealAscentAngle);
