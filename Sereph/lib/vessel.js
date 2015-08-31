@@ -144,34 +144,34 @@ define(['./api', './resources'], function (api, resources) {
             api.toggle('f.abort');
         },
         actionGroups: {
-            1: function () {
+            one: function () {
                 api.toggle('f.ag1');
             },
-            2: function () {
+            two: function () {
                 api.toggle('f.ag2');
             },
-            3: function () {
+            three: function () {
                 api.toggle('f.ag3');
             },
-            4: function () {
+            four: function () {
                 api.toggle('f.ag4');
             },
-            5: function () {
+            five: function () {
                 api.toggle('f.ag5');
             },
-            6: function () {
+            six: function () {
                 api.toggle('f.ag6');
             },
-            7: function () {
+            seven: function () {
                 api.toggle('f.ag7');
             },
-            8: function () {
+            eight: function () {
                 api.toggle('f.ag8');
             },
-            9: function () {
+            nine: function () {
                 api.toggle('f.ag9');
             },
-            10: function () {
+            ten: function () {
                 api.toggle('f.ag10');
             }
         },
@@ -244,6 +244,11 @@ define(['./api', './resources'], function (api, resources) {
                 stageMax: function (callback) {
                     api.command('r.resourceCurrentMax[' + resources.liquidFuel + ']', callback);
                 }
+            }
+        },
+        sensors:{
+            accelerometer:function(callback){
+                api.command('s.sensor.acc', callback);
             }
         }
     }

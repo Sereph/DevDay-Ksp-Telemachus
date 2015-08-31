@@ -1,23 +1,64 @@
 define(['./vessel', './world', '../bower_components/async/dist/async.js'], function (vessel, world, async) {
     function launch() {
-        //limitThrottleToTerminalVelocity();
 
         vessel.attitude.flyByWire.on();
         vessel.attitude.set(0, 0, 0);
         vessel.throttle.full();
+        vessel.actionGroups.eight();
         vessel.stage();
+        setThrottle();
         monitorGravityTurn();
     }
 
-    function limitThrottleToTerminalVelocity() {
-        var velocityCheck = setInterval(function () {
-            vessel.situation.atmosphericDensity(function (value) {
-                console.log('Atmospheric density : ' + value);
-            });
-            vessel.situation.altitude(function (value) {
-                console.log('altitude : ' + value);
-            });
-        }, 1000);
+    function setThrottle() {
+        async.parallel({
+            velocity: vessel.situation.velocity.surface.resultant,
+            atmosphericDensity: vessel.situation.atmosphericDensity,
+            altitude : vessel.situation.altitude,
+            acceleration: vessel.sensors.accelerometer
+        }, function (error, results) {
+            var idealAcceleration = getIdealAcceleration(results.altitude,results.velocity);
+            var acceleration = results.acceleration[1][0];
+            var diff = Math.abs(idealAcceleration- acceleration);
+            console.info(JSON.stringify({a:acceleration,i:idealAcceleration, d:diff}));
+            if(acceleration > idealAcceleration){
+                vessel.throttle.down();
+                return setTimeout(setThrottle, 500);
+            }
+            if(diff > 0.5){
+                vessel.throttle.full();
+                return setTimeout(setThrottle, 1000);
+            }
+            vessel.throttle.up();
+            return setTimeout(setThrottle, 500);
+
+        });
+    }
+    function getIdealAcceleration(altitude, velocity){
+        if(velocity < 100)
+        {
+            return 3;
+        }
+        if(altitude < 10000){
+            if(velocity > 300){
+                return 1;
+            }
+            return 1.8;
+        }
+        if(altitude < 20000){
+            if(velocity > 800){
+                return 1;
+            }
+            return 1.6;
+        }
+        if(altitude < 25000){
+            if(velocity > 1200){
+                return 1;
+            }
+            return 2;
+        }
+        return 8;
+
     }
 
     function monitorGravityTurn() {
