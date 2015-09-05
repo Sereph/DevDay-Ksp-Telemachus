@@ -11,7 +11,6 @@ define([], function () {
         jKSPWAPI.call("ret=" + command, function (d) {
             if (d.ret > 0) {
                 jKSPWAPI.generateNotificationWithCode(d.ret);
-
             }
         });
     }

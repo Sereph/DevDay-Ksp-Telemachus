@@ -66,6 +66,12 @@ define(['./api', './resources'], function (api, resources) {
                 get: function (callback) {
                     api.command('n.heading2', callback);
                 }
+            },
+            orientation: function (callback) {
+                api.command('n.orientation', callback);
+            },
+            velocityOrientation: function (callback) {
+                api.command('n.velocityOrientation', callback);
             }
         },
         avionics: {
