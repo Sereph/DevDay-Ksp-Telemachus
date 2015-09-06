@@ -262,7 +262,7 @@ define(['./api', './resources'], function (api, resources) {
                 api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA', callback);
             },
             getAscentInformation:function(callback){
-                api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA&pitch=n.pitch2&altitude=v.altitude', callback);
+                api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA&pitch=n.pitch2&altitude=v.altitude&heading=n.heading2', callback);
             }
         }
     }

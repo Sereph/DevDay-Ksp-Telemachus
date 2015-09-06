@@ -1,22 +1,15 @@
-define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid-controller'], function (vessel, world, async, pidController) {
+define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid-controller', 'jquery'], function (vessel, world, async, pidController, $) {
     var _gameLoopInterval;
     var _targetApoapsis = 85000;
     var ascentThrustComplete = false;
+    var ascentPitchYawThreshold = 0.02;
+    var negativeAscentPitchYawThreshold = ascentPitchYawThreshold * -1;
 
     function launch() {
-        //setInterval(function(){
-        //    vessel.situation.angleToPrograde(function(err,results){
-        //        console.info(results);
-        //    });
-        //},1000);
-
-        //vessel.actionGroups.eight();
-        //monitorGravityTurn();
-
-        vessel.throttle.full();
+        vessel.avionics.sas.on();
         vessel.attitude.flyByWire.on();
         vessel.attitude.set(0, 0, 0);
-        vessel.avionics.sas.on();
+        vessel.throttle.full();
         vessel.stage();
         beginMonitoringLoop();
     }
@@ -34,16 +27,41 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     function beginMonitoringLoop() {
         var throttleControlPid = new pidController(0.01, 0.01, 0.01, 1); // k_p, k_i, k_d,
         var pitchControlPid = new pidController(0.0001, 0.01, 0.01, 1); // k_p, k_i, k_d,
+        var headingControlPid = new pidController(0.000001, 0.01, 0.01, 1); // k_p, k_i, k_d,
         _gameLoopInterval = setInterval(function () {
             vessel.custom.getAscentInformation(function (err, results) {
                 if (!ascentThrustComplete) {
                     ascentThrottleLoop(throttleControlPid, results);
                 }
                 pitchLoop(pitchControlPid, results);
+                headingLoop(headingControlPid, results);
             });
         }, 350);
-
     }
+
+    function headingLoop(headingControlPid, results) {
+        if (results.pitch > 89) {
+            return;
+        }
+        var targetHeading = 0;
+        headingControlPid.setTarget(targetHeading);
+        var correction = headingControlPid.update(results.heading);
+        if (correction > ascentPitchYawThreshold) {
+            correction = ascentPitchYawThreshold;
+        }
+        if (correction < negativeAscentPitchYawThreshold) {
+            correction = negativeAscentPitchYawThreshold;
+        }
+        if (results.heading < 90) {
+            correction = correction * -1;
+        }
+        console.info({
+            correction: correction,
+            heading: results.heading
+        });
+        vessel.attitude.pitch.set(correction);
+    }
+
 
     function ascentThrottleLoop(throttleControlPid, results) {
         var targetVelocity = getAscentVelocity(results.apoapsis, results.altitude);
@@ -122,57 +140,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
             return result;
         }
         return 0;
-
-        //if (apoapsis < 25022) {
-        //    return Math.sqrt((900000000 - Math.pow(apoapsis, 2)) / 93332);
-        //}
-        //return Math.sqrt((1800000000 - Math.pow(apoapsis, 2)) / 400000);
     }
-
-
-    //function monitorGravityTurn() {
-    //    async.parallel({
-    //        pitch: vessel.attitude.pitch.get,
-    //        apoapsis: vessel.situation.apoapsis.height,
-    //        angularVelocity: vessel.situation.velocity.angular
-    //    }, function (error, results) {
-    //        if (results.velocity < 100) {
-    //            return setTimeout(monitorGravityTurn, 500);
-    //        }
-    //        var idealAscentAngle = getIdealAscentAngle(results.apoapsis);
-    //        var yaw = getGravityManouver(results.pitch, idealAscentAngle, results.angularVelocity);
-    //        vessel.attitude.yaw.set(yaw.magnitude);
-    //        console.info('[' + yaw + '](' + results.pitch + '/' + idealAscentAngle + ')<' + results.angularVelocity + '>');
-    //        setTimeout(monitorGravityTurn, yaw.duration);
-    //    });
-    //}
-
-    //function getGravityManouver(pitch, idealAscentAngle, angularVelocity) {
-    //    console.info(angularVelocity);
-    //    if (angularVelocity > 0.0165) {
-    //        console.info("avoiding spin");
-    //        return {
-    //            magnitude: 0,
-    //            duration: 750
-    //        };
-    //    }
-    //    var diff = Math.abs(pitch - idealAscentAngle);
-    //    var magnitude = diff / 10;
-    //    var maxMagnitude = 0.1;
-    //    if (magnitude > maxMagnitude) {
-    //        magnitude = maxMagnitude;
-    //    }
-    //    if (pitch < idealAscentAngle) {
-    //        //we are pointing lower than ideal
-    //        magnitude = (magnitude * -1);
-    //    }
-    //    return {
-    //        magnitude: magnitude,
-    //        duration: 100
-    //    }
-    //
-    //}
-
 
     return {
         launch: launch,
