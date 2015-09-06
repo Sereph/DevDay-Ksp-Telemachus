@@ -46,19 +46,6 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         var targetHeading = 90;
         headingControlPid.setTarget(targetHeading);
         var correction = headingControlPid.update(results.heading);
-        //if (correction > ascentPitchYawThreshold) {
-        //    correction = ascentPitchYawThreshold;
-        //}
-        //if (correction < negativeAscentPitchYawThreshold) {
-        //    correction = negativeAscentPitchYawThreshold;
-        //}
-        //if (results.heading < 90) {
-        //    correction = correction * -1;
-        //}
-        console.info({
-            correction: correction,
-            heading: results.heading
-        });
         vessel.attitude.pitch.set(correction);
     }
 
