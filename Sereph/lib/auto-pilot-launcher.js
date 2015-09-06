@@ -69,7 +69,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function pitchLoop(pitchControlPid, results) {
-        var targetPitch = getIdealAscentAngle(results.apoapsis);
+        var targetPitch = getIdealAscentAngle(results.altitude);
         if (targetPitch !== pitchControlPid.getTarget()) {
             pitchControlPid.reset();
             pitchControlPid.setTarget(targetPitch);
