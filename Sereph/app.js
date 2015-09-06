@@ -6,11 +6,17 @@
         }
     });
 
-    requirejs(['./auto-pilot-launcher', 'jquery'],function(autoPilotLauncher, $){
-        $(document).ready(function(){
-            $(document).on('click', '#launch-button', function(event){
+    requirejs(['./auto-pilot-launcher', 'jquery'], function (autoPilotLauncher, $) {
+        $(document).ready(function () {
+            $(document).on('click', '#launch-button', function () {
                 autoPilotLauncher.launch();
             })
+            $(document).on('click', '#stop-button', function () {
+                autoPilotLauncher.stop();
+            });
+            $(document).on('click', '#abort-button', function () {
+                autoPilotLauncher.abort();
+            });
         })
     });
 })();
