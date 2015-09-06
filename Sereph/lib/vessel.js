@@ -256,6 +256,11 @@ define(['./api', './resources'], function (api, resources) {
             accelerometer:function(callback){
                 api.command('s.sensor.acc', callback);
             }
+        },
+        custom:{
+            throttleInfo:function(callback){
+                api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA', callback);
+            }
         }
     }
 });

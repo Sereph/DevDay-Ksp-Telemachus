@@ -14,8 +14,16 @@ define([], function () {
             }
         });
     }
+    function custom(command, callback) {
+        jKSPWAPI.call(command, function (result) {
+            if(callback){
+                callback(null, result);
+            }
+        });
+    }
     return {
         command: command,
-        toggle:toggle
+        toggle:toggle,
+        custom:custom
     };
 });

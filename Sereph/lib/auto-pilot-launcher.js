@@ -19,22 +19,22 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function setThrottle() {
-        var throttleControl = new pidController(0.01, 0.01, 0.01, 1); // k_p, k_i, k_d, dt
-        async.parallel({
-            velocity: vessel.situation.velocity.surface.resultant,
-            //atmosphericDensity: vessel.situation.atmosphericDensity,
-            altitude: vessel.situation.altitude
-            //acceleration: vessel.sensors.accelerometer
-        }, function (error, results) {
-            if (results.velocity < 100) {
-                vessel.throttle.set(1);
-                return setTimeout(setThrottle, 1000);
-            }
-            var targetVelocity = getTargetVelocity(results.altitude);
+        var throttleControl = new pidController(0.01, 0.01, 0.01, 1); // k_p, k_i, k_d,
+        ascentThrottleLoop(throttleControl);
+    }
+
+    function ascentThrottleLoop(throttleControl){
+        vessel.custom.throttleInfo(function (err, results) {
+            var targetVelocity = getAscentVelocity(results.apoapsis);
             if (targetVelocity !== throttleControl.getTarget()) {
                 console.warn('new target, reseting');
                 throttleControl.reset();
                 throttleControl.setTarget(targetVelocity);
+            }
+            if(targetVelocity === 0){
+                vessel.throttle.cut();
+                //start the check for circularisation burn
+                return;
             }
             var correction = throttleControl.update(results.velocity);
             console.info({
@@ -43,35 +43,21 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
                 current: results.velocity
             });
             vessel.throttle.set(correction);
-
-
-            //var idealAcceleration = getIdealAcceleration(results.altitude, results.velocity);
-            //var acceleration = results.acceleration[1][0];
-            //var diff = Math.abs(idealAcceleration - acceleration);
-            ////console.info(JSON.stringify({a:acceleration,i:idealAcceleration, d:diff}));
-            //if (acceleration > idealAcceleration) {
-            //    vessel.throttle.down();
-            //    return setTimeout(setThrottle, 500);
-            //}
-            //if (diff > 0.5) {
-            //    vessel.throttle.full();
-            //    return setTimeout(setThrottle, 1000);
-            //}
-            //vessel.throttle.up();
-            return setTimeout(setThrottle, 1000);
-
+            return setTimeout(function(){
+                ascentThrottleLoop(throttleControl);
+            }, 1000);
         });
     }
 
-    function getTargetVelocity(altitude) {
-        if (altitude < 10000) {
-            return Math.sqrt(altitude/0.07);
+    function getAscentVelocity(apoapsis) {
+        if (apoapsis < 10000) {
+            return Math.sqrt(apoapsis/0.2) +100;
         }
-        if (altitude < 20000) {
-            return 400;
+        if (apoapsis < 35000) {
+            return Math.sqrt(apoapsis/0.054) -106.72;
         }
-        if (altitude < 35000) {
-            return 600;
+        if (apoapsis >= 80000) {
+            return 0;
         }
         return 2400;
     }
