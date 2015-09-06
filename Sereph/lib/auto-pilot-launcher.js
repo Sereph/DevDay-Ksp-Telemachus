@@ -2,8 +2,8 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     var _gameLoopInterval;
     var _targetApoapsis = 85000;
     var ascentThrustComplete = false;
-    var ascentPitchYawThreshold = 0.02;
-    var negativeAscentPitchYawThreshold = ascentPitchYawThreshold * -1;
+    // var ascentPitchYawThreshold = 0.02;
+    // var negativeAscentPitchYawThreshold = ascentPitchYawThreshold * -1;
 
     function launch() {
         vessel.avionics.sas.on();
@@ -27,7 +27,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     function beginMonitoringLoop() {
         var throttleControlPid = new pidController(0.01, 0.01, 0.01, 1); // k_p, k_i, k_d,
         var pitchControlPid = new pidController(0.0001, 0.01, 0.01, 1); // k_p, k_i, k_d,
-        var headingControlPid = new pidController(0.000001, 0.01, 0.01, 1); // k_p, k_i, k_d,
+        var headingControlPid = new pidController(0.0001, 0.001, 0.01, 1); // k_p, k_i, k_d,
         _gameLoopInterval = setInterval(function () {
             vessel.custom.getAscentInformation(function (err, results) {
                 if (!ascentThrustComplete) {
@@ -43,18 +43,18 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         if (results.pitch > 89) {
             return;
         }
-        var targetHeading = 0;
+        var targetHeading = 90;
         headingControlPid.setTarget(targetHeading);
         var correction = headingControlPid.update(results.heading);
-        if (correction > ascentPitchYawThreshold) {
-            correction = ascentPitchYawThreshold;
-        }
-        if (correction < negativeAscentPitchYawThreshold) {
-            correction = negativeAscentPitchYawThreshold;
-        }
-        if (results.heading < 90) {
-            correction = correction * -1;
-        }
+        //if (correction > ascentPitchYawThreshold) {
+        //    correction = ascentPitchYawThreshold;
+        //}
+        //if (correction < negativeAscentPitchYawThreshold) {
+        //    correction = negativeAscentPitchYawThreshold;
+        //}
+        //if (results.heading < 90) {
+        //    correction = correction * -1;
+        //}
         console.info({
             correction: correction,
             heading: results.heading
