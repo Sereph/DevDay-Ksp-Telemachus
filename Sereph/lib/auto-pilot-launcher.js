@@ -46,9 +46,8 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         var targetHeading = 90;
         headingControlPid.setTarget(targetHeading);
         var correction = headingControlPid.update(results.heading);
-        vessel.attitude.pitch.set(correction);
+        vessel.attitude.pitch.set(limitPitchYawManeuvers(correction));
     }
-
 
     function ascentThrottleLoop(throttleControlPid, results) {
         var targetVelocity = getAscentVelocity(results.apoapsis, results.altitude);
@@ -79,9 +78,10 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         return 2400;
     }
 
+    var prograde = 'prograde';
     function pitchLoop(pitchControlPid, results) {
         var targetPitch = getIdealAscentAngle(results.altitude, results.apoapsis, results.pitch);
-        if (targetPitch < 0) {
+        if (targetPitch === prograde) {
             targetPitch = results.pitch;
         }
         if (targetPitch !== pitchControlPid.getTarget()) {
@@ -90,6 +90,8 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         }
         var correction = pitchControlPid.update(results.pitch);
         correction = correction * -1;
+        correction =limitPitchYawManeuvers(correction);
+        console.info(correction);
         vessel.attitude.yaw.set(correction);
     }
 
@@ -98,35 +100,51 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
             return Math.sqrt((500000000 - Math.pow(altitude, 2)) / 61500);
         }
         if (apoapsis < 35000 && pitch > 35) {
-            return -1;
+            return prograde;
         }
-        if (apoapsis < _targetApoapsis) {
-            var ideal = apoapsis / 10000 / 1.3;
-            var diff = ideal - pitch;
-            var absDiff = Math.abs(diff);
-            var threshold = 3;
-            var result = ideal;
-            if (diff > 0) {
-                if (absDiff > threshold) {
-                    result = pitch + threshold;
-                }
-                else {
-                    result = pitch + absDiff;
-                }
-            } else {
-                if (absDiff > threshold) {
-                    result = pitch - threshold;
-                }
-                else {
-                    result = pitch - absDiff;
-                }
-            }
-            if (result < 5) {
-                return 5;
-            }
-            return result;
+        if(apoapsis >= _targetApoapsis){
+            return prograde;
         }
-        return 0;
+        var ideal = apoapsis / 10000 / 1.3;
+        var diff = ideal - pitch;
+        var absDiff = Math.abs(diff);
+        var threshold = 1;
+        var result = ideal;
+        if (diff > 0) {
+            if (absDiff > threshold) {
+                result = pitch + threshold;
+            }
+            else {
+                result = pitch + absDiff;
+            }
+        } else {
+            if (absDiff > threshold) {
+                result = pitch - threshold;
+            }
+            else {
+                result = pitch - absDiff;
+            }
+        }
+        if (result < 5) {
+            result = 5;
+        }
+        console.warn(result);
+        return result;
+    }
+
+    function limitPitchYawManeuvers(correction){
+        var upperBound = 0.3;
+        var lowerBound = -1*upperBound;
+        if(correction < lowerBound)
+        {
+            console.warn('lower bound enforced');
+            correction = lowerBound;
+        }
+        else if(correction > upperBound){
+            console.warn('upper bound enforced');
+            correction = upperBound;
+        }
+        return correction;
     }
 
     return {
