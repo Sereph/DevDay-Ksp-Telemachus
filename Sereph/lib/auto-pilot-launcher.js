@@ -1,5 +1,7 @@
 define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid-controller'], function (vessel, world, async, pidController) {
     var _gameLoopInterval;
+    var _targetApoapsis = 85000;
+    var ascentThrustComplete = false;
 
     function launch() {
         //setInterval(function(){
@@ -34,21 +36,24 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         var pitchControlPid = new pidController(0.0001, 0.01, 0.01, 1); // k_p, k_i, k_d,
         _gameLoopInterval = setInterval(function () {
             vessel.custom.getAscentInformation(function (err, results) {
-                ascentThrottleLoop(throttleControlPid, results);
+                if (!ascentThrustComplete) {
+                    ascentThrottleLoop(throttleControlPid, results);
+                }
                 pitchLoop(pitchControlPid, results);
             });
-        }, 500);
+        }, 350);
 
     }
 
     function ascentThrottleLoop(throttleControlPid, results) {
-        var targetVelocity = getAscentVelocity(results.altitude,results.apoapsis);
+        var targetVelocity = getAscentVelocity(results.apoapsis, results.altitude);
         if (targetVelocity !== throttleControlPid.getTarget()) {
             throttleControlPid.reset();
             throttleControlPid.setTarget(targetVelocity);
         }
         if (targetVelocity === 0) {
             vessel.throttle.cut();
+            ascentThrustComplete = true;
             //todo start the check for circularisation burn
             return;
         }
@@ -56,42 +61,72 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         vessel.throttle.set(correction);
     }
 
-    function getAscentVelocity(apoapsis) {
-        if (apoapsis >= 80000) {
+    function getAscentVelocity(apoapsis, altitude) {
+        if (apoapsis >= _targetApoapsis) {
             return 0;
         }
-        if (apoapsis < 12000) {
-            return Math.sqrt(apoapsis / 0.4) + 100;
+        if (altitude < 12000) {
+            return Math.sqrt(altitude / 0.4) + 100;
         }
-        if (apoapsis < 35000) {
-            return Math.sqrt(apoapsis / 0.009) - 881.5;
+        if (altitude < 35000) {
+            return Math.sqrt(altitude / 0.009) - 881.5;
         }
         return 2400;
     }
 
     function pitchLoop(pitchControlPid, results) {
-        var targetPitch = getIdealAscentAngle(results.altitude);
+        var targetPitch = getIdealAscentAngle(results.altitude, results.apoapsis, results.pitch);
+        if (targetPitch < 0) {
+            targetPitch = results.pitch;
+        }
         if (targetPitch !== pitchControlPid.getTarget()) {
             pitchControlPid.reset();
             pitchControlPid.setTarget(targetPitch);
         }
         var correction = pitchControlPid.update(results.pitch);
-        console.info({
-            pitch: results.pitch,
-            target: targetPitch,
-            correction: correction
-        });
+        correction = correction * -1;
         vessel.attitude.yaw.set(correction);
     }
 
-    function getIdealAscentAngle(apoapsis) {
-        if (apoapsis < 1000) {
-            return Math.sqrt((400000000 - Math.pow(apoapsis, 2)) / 49380);
+    function getIdealAscentAngle(altitude, apoapsis, pitch) {
+        if (altitude < 12000) {
+            return Math.sqrt((500000000 - Math.pow(altitude, 2)) / 61500);
         }
-        if (apoapsis < 22804) {
-            return Math.sqrt((700000000 - Math.pow(apoapsis, 2)) / 100000);
+        if (apoapsis < 35000 && pitch > 35) {
+            return -1;
         }
-        return Math.sqrt((1600000000 - Math.pow(apoapsis, 2)) / 600000);
+        if (apoapsis < _targetApoapsis) {
+            var ideal = apoapsis / 10000 / 1.3;
+            var diff = ideal - pitch;
+            var absDiff = Math.abs(diff);
+            var threshold = 3;
+            var result = ideal;
+            if (diff > 0) {
+                if (absDiff > threshold) {
+                    result = pitch + threshold;
+                }
+                else {
+                    result = pitch + absDiff;
+                }
+            } else {
+                if (absDiff > threshold) {
+                    result = pitch - threshold;
+                }
+                else {
+                    result = pitch - absDiff;
+                }
+            }
+            if (result < 5) {
+                return 5;
+            }
+            return result;
+        }
+        return 0;
+
+        //if (apoapsis < 25022) {
+        //    return Math.sqrt((900000000 - Math.pow(apoapsis, 2)) / 93332);
+        //}
+        //return Math.sqrt((1800000000 - Math.pow(apoapsis, 2)) / 400000);
     }
 
 
@@ -144,76 +179,4 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         stop: stop,
         abort: abort
     };
-
-    //function getIdealAscentAngle(apoapsis) {
-    //    //// start 90deg ~ arround 0 apoapsis, end 0 deg
-    //    //// don't increase pitch more than current pitch + x to prevent flips
-    //    //var idealAscentAngle;
-    //    //if (apoapsis < 1000) {
-    //    //    idealAscentAngle = 89;
-    //    //} else if (apoapsis < 2000) {
-    //    //    idealAscentAngle = 88;
-    //    //}
-    //    //else if (apoapsis < 3000) {
-    //    //    idealAscentAngle = 87;
-    //    //}
-    //    //else if (apoapsis < 4000) {
-    //    //    idealAscentAngle = 86;
-    //    //}
-    //    //else if (apoapsis < 5000) {
-    //    //    idealAscentAngle = 85;
-    //    //}
-    //    //else if (apoapsis < 6000) {
-    //    //    idealAscentAngle = 84;
-    //    //}
-    //    //else if (apoapsis < 7000) {
-    //    //    idealAscentAngle = 83;
-    //    //}
-    //    //else if (apoapsis < 8000) {
-    //    //    idealAscentAngle = 82;
-    //    //}
-    //    //else if (apoapsis < 9000) {
-    //    //    idealAscentAngle = 81;
-    //    //}
-    //    //else if (apoapsis < 10000) {
-    //    //    idealAscentAngle = 80;
-    //    //}
-    //    //else if (apoapsis < 12000) {
-    //    //    idealAscentAngle = 75;
-    //    //}
-    //    //else if (apoapsis < 14000) {
-    //    //    idealAscentAngle = 70;
-    //    //}
-    //    //else if (apoapsis < 16000) {
-    //    //    idealAscentAngle = 65;
-    //    //}
-    //    //else if (apoapsis < 18000) {
-    //    //    idealAscentAngle = 60;
-    //    //}
-    //    //else if (apoapsis < 20000) {
-    //    //    idealAscentAngle = 55;
-    //    //}
-    //    //else if (apoapsis < 25000) {
-    //    //    idealAscentAngle = 40;
-    //    //}
-    //    //else if (apoapsis < 30000) {
-    //    //    idealAscentAngle = 35;
-    //    //}
-    //    //else if (apoapsis < 35000) {
-    //    //    idealAscentAngle = 30;
-    //    //}
-    //    //else if (apoapsis < 40000) {
-    //    //    idealAscentAngle = 25;
-    //    //}
-    //    //else if (apoapsis < 45000) {
-    //    //    idealAscentAngle = 15;
-    //    //}
-    //    //else if (apoapsis < 50000) {
-    //    //    idealAscentAngle = 10;
-    //    //}
-    //    //else {
-    //    //    idealAscentAngle = 5;
-    //    //}
-    //    //return idealAscentAngle
-    //}
 });
