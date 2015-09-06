@@ -14,6 +14,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         vessel.throttle.full();
         vessel.attitude.flyByWire.on();
         vessel.attitude.set(0, 0, 0);
+        vessel.avionics.sas.on();
         vessel.stage();
         beginMonitoringLoop();
     }
@@ -41,7 +42,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function ascentThrottleLoop(throttleControlPid, results) {
-        var targetVelocity = getAscentVelocity(results.apoapsis);
+        var targetVelocity = getAscentVelocity(results.altitude,results.apoapsis);
         if (targetVelocity !== throttleControlPid.getTarget()) {
             throttleControlPid.reset();
             throttleControlPid.setTarget(targetVelocity);
@@ -56,14 +57,14 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function getAscentVelocity(apoapsis) {
-        if (apoapsis < 10000) {
-            return Math.sqrt(apoapsis / 0.2) + 100;
-        }
-        if (apoapsis < 35000) {
-            return Math.sqrt(apoapsis / 0.054) - 106.72;
-        }
         if (apoapsis >= 80000) {
             return 0;
+        }
+        if (apoapsis < 12000) {
+            return Math.sqrt(apoapsis / 0.4) + 100;
+        }
+        if (apoapsis < 35000) {
+            return Math.sqrt(apoapsis / 0.009) - 881.5;
         }
         return 2400;
     }
