@@ -70,8 +70,16 @@ define(['./api', './resources'], function (api, resources) {
             orientation: function (callback) {
                 api.command('n.orientation', callback);
             },
-            velocityOrientation: function (callback) {
-                api.command('n.velocityOrientation', callback);
+            velocityOrientationAngle: function (callback) {
+                api.command('n.velocityOrientationAngle', callback);
+            },
+            mechJeb: {
+                holdPrograde: function () {
+                    api.command('mj.prograde');
+                },
+                off: function () {
+                    api.command('mj.smartassoff');
+                }
             }
         },
         avionics: {
@@ -210,8 +218,8 @@ define(['./api', './resources'], function (api, resources) {
             dynamicPressure: function (callback) {
                 api.command('v.dynamicPressure', callback);
             },
-            angleToPrograde:function(callback){
-                api.command('v.angleToPrograde',callback);
+            angleToPrograde: function (callback) {
+                api.command('v.angleToPrograde', callback);
             },
             velocity: {
                 surface: {
@@ -231,7 +239,7 @@ define(['./api', './resources'], function (api, resources) {
                 angular: function (callback) {
                     api.command('v.angularVelocity', callback);
                 },
-                oribital:function (callback) {
+                oribital: function (callback) {
                     api.command('v.orbitalVelocity', callback);
                 }
             }
@@ -252,17 +260,17 @@ define(['./api', './resources'], function (api, resources) {
                 }
             }
         },
-        sensors:{
-            accelerometer:function(callback){
+        sensors: {
+            accelerometer: function (callback) {
                 api.command('s.sensor.acc', callback);
             }
         },
-        custom:{
-            throttleInfo:function(callback){
+        custom: {
+            throttleInfo: function (callback) {
                 api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA', callback);
             },
-            getAscentInformation:function(callback){
-                api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA&pitch=n.pitch2&altitude=v.altitude&heading=n.heading2', callback);
+            getAscentInformation: function (callback) {
+                api.custom('velocity=v.surfaceVelocity&apoapsis=o.ApA&pitch=n.pitch2&altitude=v.altitude&heading=n.heading2&velocityOrientationAngle=n.velocityOrientationAngle', callback);
             }
         }
     }

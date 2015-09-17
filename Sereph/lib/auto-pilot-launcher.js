@@ -2,10 +2,15 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     var _gameLoopInterval;
     var _targetApoapsis = 85000;
     var ascentThrustComplete = false;
-    // var ascentPitchYawThreshold = 0.02;
-    // var negativeAscentPitchYawThreshold = ascentPitchYawThreshold * -1;
-
+    var ascentPitchComplete = false;
+    var fairingsDiscarded = false;
     function launch() {
+
+        //setInterval(function () {
+        //    vessel.attitude.velocityOrientationAngle(function (err, result) {
+        //        console.log(result);
+        //    });
+        //}, 1000);
         vessel.avionics.sas.on();
         vessel.attitude.flyByWire.on();
         vessel.attitude.set(0, 0, 0);
@@ -16,12 +21,27 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
 
     function stop() {
         vessel.attitude.flyByWire.off();
+        vessel.attitude.mechJeb.off();
         clearInterval(_gameLoopInterval);
     }
 
     function abort() {
         stop();
         vessel.abort();
+    }
+
+    function deployFairingsIfAllowed(results) {
+        if (fairingsDiscarded === true) {
+            return;
+        }
+        if (results.altitude > 41000) {
+            fairingsDiscarded = true;
+            vessel.stage();
+        }
+        return;
+    }
+    function deploySolarPanels() {
+        vessel.actionGroups.seven();
     }
 
     function beginMonitoringLoop() {
@@ -33,7 +53,10 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
                 if (!ascentThrustComplete) {
                     ascentThrottleLoop(throttleControlPid, results);
                 }
-                pitchLoop(pitchControlPid, results);
+                if (!ascentPitchComplete) {
+                    pitchLoop(pitchControlPid, results);
+                }
+                deployFairingsIfAllowed(results)
                 headingLoop(headingControlPid, results);
             });
         }, 350);
@@ -79,8 +102,16 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     var prograde = 'prograde';
+
     function pitchLoop(pitchControlPid, results) {
-        var targetPitch = getIdealAscentAngle(results.altitude, results.apoapsis, results.pitch);
+        if (results.apoapsis >= _targetApoapsis) {
+            ascentPitchComplete = true;
+            console.info('pitch loop done')
+            vessel.attitude.flyByWire.off();
+            vessel.attitude.mechJeb.holdPrograde();
+            return;
+        }
+        var targetPitch = getIdealAscentAngle(results.altitude, results.apoapsis, results.pitch, results.velocityOrientationAngle);
         if (targetPitch === prograde) {
             targetPitch = results.pitch;
         }
@@ -90,57 +121,40 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         }
         var correction = pitchControlPid.update(results.pitch);
         correction = correction * -1;
-        correction =limitPitchYawManeuvers(correction);
-        console.info(correction);
+        correction = limitPitchYawManeuvers(correction);
         vessel.attitude.yaw.set(correction);
     }
 
-    function getIdealAscentAngle(altitude, apoapsis, pitch) {
+    function getIdealAscentAngle(altitude, apoapsis, pitch, velocityOrientationAngle) {
         if (altitude < 12000) {
             return Math.sqrt((500000000 - Math.pow(altitude, 2)) / 61500);
         }
         if (apoapsis < 35000 && pitch > 35) {
             return prograde;
         }
-        if(apoapsis >= _targetApoapsis){
-            return prograde;
-        }
-        var ideal = apoapsis / 10000 / 1.3;
-        var diff = ideal - pitch;
-        var absDiff = Math.abs(diff);
-        var threshold = 1;
-        var result = ideal;
-        if (diff > 0) {
-            if (absDiff > threshold) {
-                result = pitch + threshold;
-            }
-            else {
-                result = pitch + absDiff;
-            }
-        } else {
-            if (absDiff > threshold) {
-                result = pitch - threshold;
-            }
-            else {
-                result = pitch - absDiff;
-            }
-        }
-        if (result < 5) {
-            result = 5;
-        }
-        console.warn(result);
-        return result;
+        return getIdealAscentAngleForAbove35000(pitch, velocityOrientationAngle);
     }
 
-    function limitPitchYawManeuvers(correction){
+    function getIdealAscentAngleForAbove35000(pitch, velocityOrientationAngle) {
+        if (pitch <= 4) {
+            console.info('at target');
+            return prograde;
+        }
+        if (velocityOrientationAngle > 5) {
+            console.info(velocityOrientationAngle);
+            return prograde;
+        }
+        return pitch - 3;
+    }
+
+    function limitPitchYawManeuvers(correction) {
         var upperBound = 0.3;
-        var lowerBound = -1*upperBound;
-        if(correction < lowerBound)
-        {
+        var lowerBound = -1 * upperBound;
+        if (correction < lowerBound) {
             console.warn('lower bound enforced');
             correction = lowerBound;
         }
-        else if(correction > upperBound){
+        else if (correction > upperBound) {
             console.warn('upper bound enforced');
             correction = upperBound;
         }
