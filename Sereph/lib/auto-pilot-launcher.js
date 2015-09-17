@@ -1,11 +1,17 @@
 define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid-controller', 'jquery'], function (vessel, world, async, pidController, $) {
     var _gameLoopInterval;
     var _targetApoapsis = 85000;
-    var ascentThrustComplete = false;
-    var ascentPitchComplete = false;
-    var fairingsDiscarded = false;
-    function launch() {
+    var _maximumApoapsis = 120000;
+    var _minimumPeriapsis = 70000;
+    var _fairingDeployAltitude = 45000;
+    var _targetPeriapsis = _targetApoapsis;
+    var _ascentThrustComplete = false;
+    var _ascentPitchComplete = false;
+    var _fairingsDiscarded = false;
+    var _watchingForCircularisation = false;
+    var _startedCircularisationBurn = false;
 
+    function launch() {
         //setInterval(function () {
         //    vessel.attitude.velocityOrientationAngle(function (err, result) {
         //        console.log(result);
@@ -31,17 +37,61 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function deployFairingsIfAllowed(results) {
-        if (fairingsDiscarded === true) {
+        if (_fairingsDiscarded === true) {
             return;
         }
-        if (results.altitude > 41000) {
-            fairingsDiscarded = true;
+        if (results.altitude > _fairingDeployAltitude) {
+            _fairingsDiscarded = true;
             vessel.stage();
         }
         return;
     }
+
     function deploySolarPanels() {
         vessel.actionGroups.seven();
+    }
+
+    var circularisationStage = 1;
+
+    function circularisationLoopUsingFirstStage(results) {
+        if (results.timeToApoapsis > 11 && _startedCircularisationBurn === false) {
+            return;
+        }
+        _startedCircularisationBurn = true;
+        if (circularisationStage === -1) {
+            return;
+        }
+        if (circularisationStage === 1) {
+            if (results.periapsis < 10000) {
+                vessel.throttle.full();
+            } else {
+                vessel.throttle.cut();
+                circularisationStage = -1;
+                setTimeout(function () {
+                    vessel.stage();
+                    setTimeout(function () {
+                        circularisationStage = 2;
+                        deploySolarPanels();
+                    }, 1000);
+                }, 1000);
+            }
+        } else {
+            var belowTargetPeriapsis =results.periapsis < _targetPeriapsis;
+            var aboveMinimumPeriapsis =results.periapsis > _minimumPeriapsis;
+            var aboveMaximumApoapsis = results.apoapsis > _maximumApoapsis;
+            if (belowTargetPeriapsis) {
+                if(aboveMaximumApoapsis && aboveMinimumPeriapsis){
+                    vessel.throttle.cut();
+                    _watchingForCircularisation = false;
+                    stop();
+                }
+                vessel.throttle.full();
+            } else {
+                vessel.throttle.cut();
+                _watchingForCircularisation = false;
+                stop();
+            }
+        }
     }
 
     function beginMonitoringLoop() {
@@ -50,14 +100,17 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         var headingControlPid = new pidController(0.0001, 0.001, 0.01, 1); // k_p, k_i, k_d,
         _gameLoopInterval = setInterval(function () {
             vessel.custom.getAscentInformation(function (err, results) {
-                if (!ascentThrustComplete) {
+                if (!_ascentThrustComplete) {
                     ascentThrottleLoop(throttleControlPid, results);
                 }
-                if (!ascentPitchComplete) {
+                if (!_ascentPitchComplete) {
                     pitchLoop(pitchControlPid, results);
                 }
                 deployFairingsIfAllowed(results)
                 headingLoop(headingControlPid, results);
+                if (_watchingForCircularisation === true) {
+                    circularisationLoopUsingFirstStage(results);
+                }
             });
         }, 350);
     }
@@ -80,7 +133,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         }
         if (targetVelocity === 0) {
             vessel.throttle.cut();
-            ascentThrustComplete = true;
+            _ascentThrustComplete = true;
             //todo start the check for circularisation burn
             return;
         }
@@ -105,10 +158,12 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
 
     function pitchLoop(pitchControlPid, results) {
         if (results.apoapsis >= _targetApoapsis) {
-            ascentPitchComplete = true;
+            _ascentPitchComplete = true;
             console.info('pitch loop done')
             vessel.attitude.flyByWire.off();
             vessel.attitude.mechJeb.holdPrograde();
+            vessel.avionics.rcs.on();
+            _watchingForCircularisation = true;
             return;
         }
         var targetPitch = getIdealAscentAngle(results.altitude, results.apoapsis, results.pitch, results.velocityOrientationAngle);
