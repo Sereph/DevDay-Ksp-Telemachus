@@ -69,6 +69,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
                 circularisationStage = -1;
                 setTimeout(function () {
                     vessel.stage();
+                    deploySolarPanels();
                     setTimeout(function () {
                         circularisationStage = 2;
                         deploySolarPanels();
@@ -102,7 +103,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         var throttleControlPid = new pidController(0.01, 0.01, 0.01, 1); // k_p, k_i, k_d,
         var pitchControlPid = new pidController(0.0001, 0.01, 0.01, 1); // k_p, k_i, k_d,
         var headingControlPid = new pidController(0.0001, 0.001, 0.01, 1); // k_p, k_i, k_d,
-        var rollControlPid = new pidController(0.00001, 0.000001, 0.01, 0.35); // k_p, k_i, k_d,
+        var rollControlPid = new pidController(0.00005, 0.000001, 0.01, 0.35); // k_p, k_i, k_d,
         _gameLoopInterval = setInterval(function () {
             vessel.custom.getAscentInformation(function (err, results) {
                 if (!_ascentPhaseOneComplete) {
@@ -178,7 +179,10 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
         if (altitude < 10000) {
             return (0.015 * altitude) + 130
         }
-        return (Math.pow(altitude, 2) / 1100000) + 190;
+        if(altitude > 35000){
+            return 2500;
+        }
+        return (Math.pow(altitude, 2) / 1100500) + 190;
     }
 
     var prograde = 'prograde';
@@ -210,7 +214,7 @@ define(['./vessel', './world', '../bower_components/async/dist/async.js', './pid
     }
 
     function getPitchBasedOnAngle(altitude, pitch, velocityOrientationAngle) {
-        if (pitch <= 5) {
+        if (pitch <= 7) {
             console.info('at target');
             return prograde;
         }
