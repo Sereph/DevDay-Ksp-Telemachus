@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ground Track</title>
+  <script src="../assets/js/math_polyfill.js"></script>
+  <script src="../assets/js/numeric.js"></script>
+  <script src="../assets/js/numeral.min.js"></script>
+  <script src="../assets/js/chartist.min.js"></script>
+  <script src="../assets/js/time_formatters.js"></script>
+  <script src="../assets/js/data_formatters.js"></script>
+  <script src="../assets/js/prototype.js"></script>
+  <script src="../assets/js/leaflet.ksp.js"></script>
+  <script src="../assets/js/L.Graticule.js"></script>
+  <script src="../assets/js/three.min.js"></script>
+  <script src="../assets/js/tween.min.js"></script>
+
+
+  <script src="../assets/js/settings.js"></script>
+  <script src="../assets/js/telemachus.js"></script>
+  <script src="../assets/js/orbital_math.js"></script>
+  <script src="../assets/js/orbital_prediction.js"></script>
+  <script src="../assets/js/hohmann-intercept.js"></script>
+
+  <script src="../assets/js/title_bar.js"></script>
+  <script src="../assets/js/button_indicator.js"></script>
+  <script src="../assets/js/readout_table.js"></script>
+  <script src="../assets/js/orbiting_body_info_table.js"></script>
+  <script src="../assets/js/resource_monitor.js"></script>
+  <script src="../assets/js/ground_track.js"></script>
+  <script src="../assets/js/position_map.js"></script>
+  <script src="../assets/js/navball.js"></script>
+  <script src="../assets/js/atmospheric_density_gauge.js"></script>
+  <script src="../assets/js/throttle_gauge.js"></script>
+  <script src="../assets/js/altitude_tracker.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/chartist.min.css" />
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/leafletksp.css" />
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/application.css" />
+
+  
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/ground-track.css" />
+
+</head>
+<body>
+  <nav>
+    <ul>
+      <li id="" class="current">
+  <a href="../ground-track/index.html">
+    <img src="../assets/images/ground-track-preview.png"/>
+    Ground Track
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../ascension/index.html">
+    <img src="../assets/images/ascension-preview.png"/>
+    Ascension
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../landing/index.html">
+    <img src="../assets/images/landing-preview.png"/>
+    Landing
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../boost/index.html">
+    <img src="../assets/images/boost-preview.png"/>
+    BOOST/EECOM
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../fido/index.html">
+    <img src="../assets/images/fido-preview.png"/>
+    FIDO
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../science/index.html">
+    <img src="../assets/images/science-preview.png"/>
+    SCIENCE
+  </a>
+</li>
+
+      <li id="telemachus-console" class="">
+  <a href="/telemachus/console.html">
+    <img src="../assets/images/telemachus-preview.png"/>
+    Telemachus Console
+  </a>
+</li>
+
+      <li id="mkon" class="">
+  <a href="/telemachus/MKON/index.html">
+    <img src="../assets/images/mkon-preview.png"/>
+    MKON
+  </a>
+</li>
+
+      <li id="settings-link" class="">
+  <a href="#settings">
+    <img src="../assets/images/settings-preview.png"/>
+    Settings
+  </a>
+</li>
+    </ul>
+    <div id="nav_toggle"><a href="#">&darr; Open</a></div>
+  </nav>
+
+  <section id="settings_overlay" >
+    <form id="settings">
+      <h2>Settings</h2>
+      <fieldset>
+        <label for="host">Host</label>
+        <input name="host" id="host" type="text" placeholder="localhost"/><br>
+
+        <label for="port">Port</label>
+        <input name="port" id="port" type="text" placeholder="8085"/>
+      </fieldset>
+
+      <button type="submit">Save &amp; Close</button>
+    </form>
+  </section>
+
+  <header id="title-bar">
+    <div id="mission-time-warp-indicator" class="readout-display">
+      <span id="mission-time">T+12:34:14 MET</span>
+    </div>
+
+    <h1>Ground Track</h1>
+
+    <div id="world-clock" class="readout-display">
+      Year 1, Day 1 00:23:13 UT
+    </div>
+  </header>
+
+  <div id="content">
+    
+
+
+<div id="top-panel">
+  <div id="resources" class="readout-display">
+    <div class="resource-grid">
+      <div id="liquid-fuel" class="resource-readout">
+  <p>Liquid Fuel</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+        <div class="totals">
+          <span id="liquid-fuel-current-stage-value">0</span>/<span id="liquid-fuel-current-stage-max">100</span>
+        </div>
+      
+      <progress id="liquid-fuel-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+      <div class="totals">
+        <span id="liquid-fuel-total-value">0</span>/<span id="liquid-fuel-total-max">100</span>
+      </div>
+    
+    <progress id="liquid-fuel-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+
+      <div id="oxidizer" class="resource-readout">
+  <p>Oxidizer</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+        <div class="totals">
+          <span id="oxidizer-current-stage-value">0</span>/<span id="oxidizer-current-stage-max">100</span>
+        </div>
+      
+      <progress id="oxidizer-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+      <div class="totals">
+        <span id="oxidizer-total-value">0</span>/<span id="oxidizer-total-max">100</span>
+      </div>
+    
+    <progress id="oxidizer-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+
+      <div id="electric-charge" class="resource-readout">
+  <p>Electric Charge</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+        <div class="totals">
+          <span id="electric-charge-current-stage-value">0</span>/<span id="electric-charge-current-stage-max">100</span>
+        </div>
+      
+      <progress id="electric-charge-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+      <div class="totals">
+        <span id="electric-charge-total-value">0</span>/<span id="electric-charge-total-max">100</span>
+      </div>
+    
+    <progress id="electric-charge-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+
+      <div id="monopropellant" class="resource-readout">
+  <p>Monopropellant</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+        <div class="totals">
+          <span id="monopropellant-current-stage-value">0</span>/<span id="monopropellant-current-stage-max">100</span>
+        </div>
+      
+      <progress id="monopropellant-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+      <div class="totals">
+        <span id="monopropellant-total-value">0</span>/<span id="monopropellant-total-max">100</span>
+      </div>
+    
+    <progress id="monopropellant-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+    </div>
+
+    <div id="ablator-readout">
+      <div id="ablator" class="resource-readout">
+  <p>Ablator</p>
+
+  
+
+  <div>
+    
+    
+      <div class="totals">
+        <span id="ablator-total-value">0</span>/<span id="ablator-total-max">100</span>
+      </div>
+    
+    <progress id="ablator-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+    </div>
+  </div>
+
+  <div id="button-panel">
+    <button id="rcs" disabled="disabled" class="status">RCS</button>
+    <button id="sas" disabled="disabled" class="status">SAS</button>
+  </div>
+
+  <table id="orbital-data" class="readout-display readout-table"></table>
+</div>
+
+<div id="ground-track-wrapper">
+  <div id="gt-map" class="ground-track readout-display"></div>
+  <div id="altitude-estimate" class="readout-display">
+    <h2>Altitude Estimate</h2>
+    <div id="altitude-estimate-chart" class="ct-chart"></div>
+  </div>
+</div>
+
+
+  </div>
+
+
+  <script>
+
+  $(document).observe("dom:loaded", function() {
+    window.settings = new Settings(window.location.hostname, window.location.port)
+    $('settings')['host'].value = settings.getHost()
+    $('settings')['port'].value = settings.getPort()
+
+    function updateTelemachusAndMKONLinks(){
+      var baseURL = "http://" + settings.getHost() + ":" + settings.getPort()
+      $('telemachus-console').down('a').href = baseURL + "/telemachus/console.html"
+      $('mkon').down('a').href = baseURL + "/telemachus/MKON/index.html"
+    }
+
+    updateTelemachusAndMKONLinks()
+
+    $('settings-link').observe('click', function(e){
+      e.preventDefault()
+      $('settings_overlay').addClassName('open')
+    })
+
+    $('settings').observe('submit', function(e){
+      e.preventDefault();
+      var form = e.target
+      window.settings.setHost(form['host'].value)
+      window.settings.setPort(form['port'].value)
+
+      window.datalink.updateConnection(
+        window.settings.getHost(),
+        window.settings.getPort()
+      )
+
+      updateTelemachusAndMKONLinks()
+
+      $('settings_overlay').removeClassName('open')
+    })
+
+    window.datalink = new Telemachus(settings.getHost(), settings.getPort())
+    window.titleBar = new TitleBar(datalink, 'title-bar')
+
+    $('nav_toggle').observe("click", function(e){
+      var nav = $$('nav')[0]
+      nav.toggleClassName('open')
+      if(nav.hasClassName('open')){
+        $('nav_toggle').down('a').update('&uarr; Close')
+      } else{
+        $('nav_toggle').down('a').update('&darr; Open')
+      }
+    })
+
+    
+  window.datalink.rate = 1000
+  window.groundTrack = new GroundTrack(datalink, 'gt-map', 'altitude-estimate-chart')
+  window.rcsButtonIndicator = new ButtonIndicator(datalink, 'rcs', 'v.rcsValue')
+  window.sasButtonIndicator = new ButtonIndicator(datalink, 'sas', 'v.sasValue')
+
+  window.liquidFuelMonitor = new ResourceMonitor(datalink, 'LiquidFuel', {
+    currentStageProgressBar: $('liquid-fuel-current'),
+    totalProgressBar: $('liquid-fuel-total'),
+    valuePrefix: 'liquid-fuel'
+  })
+
+  window.oxidizerMonitor = new ResourceMonitor(datalink, 'Oxidizer', {
+    currentStageProgressBar: $('oxidizer-current'),
+    totalProgressBar: $('oxidizer-total'),
+    valuePrefix: 'oxidizer'
+  })
+
+  window.electricChargeMonitor = new ResourceMonitor(datalink, 'ElectricCharge', {
+    currentStageProgressBar: $('electric-charge-current'),
+    totalProgressBar: $('electric-charge-total'),
+    valuePrefix: 'electric-charge'
+  })
+
+  window.monopropellantMonitor = new ResourceMonitor(datalink, 'Monopropellant', {
+    currentStageProgressBar: $('monopropellant-current'),
+    totalProgressBar: $('monopropellant-total'),
+    valuePrefix: 'monopropellant'
+  })
+
+  window.ablatorMonitor = new ResourceMonitor(datalink, 'Ablator', {
+    totalProgressBar: $('ablator-total'),
+    valuePrefix: 'ablator'
+  })
+
+
+
+  window.readoutTable = new ReadoutTable(datalink, 'orbital-data', [
+    {
+      label: "Altitude",
+      value: 'v.altitude',
+      formatter: function(value){ return DataFormatters.distanceString(value) }
+    },
+    {
+      label: "Apoapsis",
+      value: 'o.ApA',
+      formatter: function(value){ return DataFormatters.distanceString(value) }
+    },
+    {
+      label: "Periapsis",
+      value: 'o.PeA',
+      formatter: function(value){ return DataFormatters.distanceString(value) }
+    },
+    {
+      label: "Time to Apoapsis",
+      value: 'o.timeToAp',
+      formatter: function(value){ return "-" + TimeFormatters.durationString(value) }
+    },
+    {
+      label: "Time to Periapsis",
+      value: 'o.timeToPe',
+      formatter: function(value){ return "-" + TimeFormatters.durationString(value) }
+    },
+    {
+      label: "Inclination",
+      value: 'o.inclination',
+      formatter: function(value){ return DataFormatters.degreeString(value) }
+    },
+    {
+      label: "Eccentricity",
+      value: 'o.eccentricity',
+      formatter: function(value){ return value.toFixed(3) }
+    },
+    {
+      label: "Orbital Velocity",
+      value: 'v.orbitalVelocity',
+      formatter: function(value){ return DataFormatters.velocityString(value) }
+    },
+  ])
+
+  })
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Telemachus-Sereph",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Sereph/DevDay-Ksp-Telemachus",
+  "authors": [
+    "Ryan Kotzen <Ryank@entelect.co.za>"
+  ],
+  "description": "A custom ui for the Telemachus plugin for KSP",
+  "main": "information.html",
+  "moduleType": [
+    "amd"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "require": "*",
+    "moment": "2.10.6"
+  }
+}

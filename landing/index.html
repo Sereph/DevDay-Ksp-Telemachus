@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Landing Module</title>
+  <script src="../assets/js/math_polyfill.js"></script>
+  <script src="../assets/js/numeric.js"></script>
+  <script src="../assets/js/numeral.min.js"></script>
+  <script src="../assets/js/chartist.min.js"></script>
+  <script src="../assets/js/time_formatters.js"></script>
+  <script src="../assets/js/data_formatters.js"></script>
+  <script src="../assets/js/prototype.js"></script>
+  <script src="../assets/js/leaflet.ksp.js"></script>
+  <script src="../assets/js/L.Graticule.js"></script>
+  <script src="../assets/js/three.min.js"></script>
+  <script src="../assets/js/tween.min.js"></script>
+
+
+  <script src="../assets/js/settings.js"></script>
+  <script src="../assets/js/telemachus.js"></script>
+  <script src="../assets/js/orbital_math.js"></script>
+  <script src="../assets/js/orbital_prediction.js"></script>
+  <script src="../assets/js/hohmann-intercept.js"></script>
+
+  <script src="../assets/js/title_bar.js"></script>
+  <script src="../assets/js/button_indicator.js"></script>
+  <script src="../assets/js/readout_table.js"></script>
+  <script src="../assets/js/orbiting_body_info_table.js"></script>
+  <script src="../assets/js/resource_monitor.js"></script>
+  <script src="../assets/js/ground_track.js"></script>
+  <script src="../assets/js/position_map.js"></script>
+  <script src="../assets/js/navball.js"></script>
+  <script src="../assets/js/atmospheric_density_gauge.js"></script>
+  <script src="../assets/js/throttle_gauge.js"></script>
+  <script src="../assets/js/altitude_tracker.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/chartist.min.css" />
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/leafletksp.css" />
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/application.css" />
+
+  
+  <link rel="stylesheet" type="text/css" href="../assets/stylesheets/landing.css" />
+
+</head>
+<body>
+  <nav>
+    <ul>
+      <li id="" class="">
+  <a href="../ground-track/index.html">
+    <img src="../assets/images/ground-track-preview.png"/>
+    Ground Track
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../ascension/index.html">
+    <img src="../assets/images/ascension-preview.png"/>
+    Ascension
+  </a>
+</li>
+
+      <li id="" class="current">
+  <a href="../landing/index.html">
+    <img src="../assets/images/landing-preview.png"/>
+    Landing
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../boost/index.html">
+    <img src="../assets/images/boost-preview.png"/>
+    BOOST/EECOM
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../fido/index.html">
+    <img src="../assets/images/fido-preview.png"/>
+    FIDO
+  </a>
+</li>
+
+      <li id="" class="">
+  <a href="../science/index.html">
+    <img src="../assets/images/science-preview.png"/>
+    SCIENCE
+  </a>
+</li>
+
+      <li id="telemachus-console" class="">
+  <a href="/telemachus/console.html">
+    <img src="../assets/images/telemachus-preview.png"/>
+    Telemachus Console
+  </a>
+</li>
+
+      <li id="mkon" class="">
+  <a href="/telemachus/MKON/index.html">
+    <img src="../assets/images/mkon-preview.png"/>
+    MKON
+  </a>
+</li>
+
+      <li id="settings-link" class="">
+  <a href="#settings">
+    <img src="../assets/images/settings-preview.png"/>
+    Settings
+  </a>
+</li>
+    </ul>
+    <div id="nav_toggle"><a href="#">&darr; Open</a></div>
+  </nav>
+
+  <section id="settings_overlay" >
+    <form id="settings">
+      <h2>Settings</h2>
+      <fieldset>
+        <label for="host">Host</label>
+        <input name="host" id="host" type="text" placeholder="localhost"/><br>
+
+        <label for="port">Port</label>
+        <input name="port" id="port" type="text" placeholder="8085"/>
+      </fieldset>
+
+      <button type="submit">Save &amp; Close</button>
+    </form>
+  </section>
+
+  <header id="title-bar">
+    <div id="mission-time-warp-indicator" class="readout-display">
+      <span id="mission-time">T+12:34:14 MET</span>
+    </div>
+
+    <h1>Landing Module</h1>
+
+    <div id="world-clock" class="readout-display">
+      Year 1, Day 1 00:23:13 UT
+    </div>
+  </header>
+
+  <div id="content">
+    
+
+
+<div id="top-panel">
+  <div id="position-map" class="map readout-display"></div>
+
+  <div id="navigation-and-atmospheric-density" class="gauge">
+    <div class="navigation-wrapper">
+  <div id="navball"></div>
+  <div id="navball-heading"></div>
+</div>
+    <div class="atmospheric-density-wrapper">
+  <progress id="atmospheric-density" class="atmospheric_density"></progress>
+  <p>Atmosphere</p>
+</div>
+  </div>
+
+  <div id="throttle-and-button-readout">
+
+    <div id="ablator-readout" class="readout-display">
+      <div id="ablator" class="resource-readout">
+  <p>Ablator</p>
+
+  
+
+  <div>
+    
+    
+    <progress id="ablator-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+    </div>
+
+    <div id="button-panel">
+      <button id="rcs" disabled="disabled" class="status">RCS</button>
+      <button id="sas" disabled="disabled" class="status">SAS</button>
+      <button id="light" disabled="disabled" class="status">LGHT</button>
+      <button id="gear" disabled="disabled" class="status">GEAR</button>
+      <button id="brake" disabled="disabled" class="status">BRK</button>
+    </div>
+
+    <div class="throttle-wrapper gauge">
+  <p>
+    <span class="min">0</span>
+    Throttle
+    <span class="max">100</span>
+  </p>
+  <progress id="throttle" class="throttle"></progress>
+</div>
+  </div>
+
+  <div id="landing-data" class="readout-display">
+    <table id="ascension-data" class="readout-table"></table>
+
+    <div id="resources">
+      <div id="liquid-fuel" class="resource-readout">
+  <p>Liquid Fuel</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+      <progress id="liquid-fuel-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+    <progress id="liquid-fuel-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+
+      <div id="oxidizer" class="resource-readout">
+  <p>Oxidizer</p>
+
+  
+    <div>
+      <span class="label">Current Stage</span><br>
+      
+      <progress id="oxidizer-current" value="0" max="0">0%</progress>
+    </div>
+  
+
+  <div>
+    
+      <span class="label">Total</span><br>
+    
+    
+    <progress id="oxidizer-total" value="0" max="0">0%</progress>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+
+<div class="readout-display">
+  <div class="legend">
+  <p>
+    <span id="altitude" class="item"></span>Altitude
+
+    <span id="height-from-terrain" class="item"></span>Terrain Height
+  </p>
+</div>
+<div id='altitude-tracker'></div>
+</div>
+
+
+  </div>
+
+
+  <script>
+
+  $(document).observe("dom:loaded", function() {
+    window.settings = new Settings(window.location.hostname, window.location.port)
+    $('settings')['host'].value = settings.getHost()
+    $('settings')['port'].value = settings.getPort()
+
+    function updateTelemachusAndMKONLinks(){
+      var baseURL = "http://" + settings.getHost() + ":" + settings.getPort()
+      $('telemachus-console').down('a').href = baseURL + "/telemachus/console.html"
+      $('mkon').down('a').href = baseURL + "/telemachus/MKON/index.html"
+    }
+
+    updateTelemachusAndMKONLinks()
+
+    $('settings-link').observe('click', function(e){
+      e.preventDefault()
+      $('settings_overlay').addClassName('open')
+    })
+
+    $('settings').observe('submit', function(e){
+      e.preventDefault();
+      var form = e.target
+      window.settings.setHost(form['host'].value)
+      window.settings.setPort(form['port'].value)
+
+      window.datalink.updateConnection(
+        window.settings.getHost(),
+        window.settings.getPort()
+      )
+
+      updateTelemachusAndMKONLinks()
+
+      $('settings_overlay').removeClassName('open')
+    })
+
+    window.datalink = new Telemachus(settings.getHost(), settings.getPort())
+    window.titleBar = new TitleBar(datalink, 'title-bar')
+
+    $('nav_toggle').observe("click", function(e){
+      var nav = $$('nav')[0]
+      nav.toggleClassName('open')
+      if(nav.hasClassName('open')){
+        $('nav_toggle').down('a').update('&uarr; Close')
+      } else{
+        $('nav_toggle').down('a').update('&darr; Open')
+      }
+    })
+
+    
+  window.navball = new Navball(window.datalink, 'navball', 'navball-heading')
+  window.rcsButtonIndicator = new ButtonIndicator(datalink, 'rcs', 'v.rcsValue')
+  window.sasButtonIndicator = new ButtonIndicator(datalink, 'sas', 'v.sasValue')
+  window.lightButtonIndicator = new ButtonIndicator(datalink, 'light', 'v.lightValue')
+  window.gearButtonIndicator = new ButtonIndicator(datalink, 'gear', 'v.gearValue')
+  window.brakeButtonIndicator = new ButtonIndicator(datalink, 'brake', 'v.brakeValue')
+
+  window.atmosphericDensityGauge = new AtmosphericDensityGauge(window.datalink, 'atmospheric-density')
+  window.throttleGauge = new ThrottleGauge(window.datalink, 'throttle')
+
+  window.altitudeTracker = new AltitudeTracker(datalink, 'altitude-tracker', {maxDataPoints : 50})
+
+  window.positionMap = new PositionMap(datalink, 'position-map')
+
+  window.liquidFuelMonitor = new ResourceMonitor(datalink, 'LiquidFuel', {
+    currentStageProgressBar: $('liquid-fuel-current'),
+    totalProgressBar: $('liquid-fuel-total')
+  })
+
+  window.oxidizerMonitor = new ResourceMonitor(datalink, 'Oxidizer', {
+    currentStageProgressBar: $('oxidizer-current'),
+    totalProgressBar: $('oxidizer-total')
+  })
+
+  window.ablatorMonitor = new ResourceMonitor(datalink, 'Ablator', {
+    currentStageProgressBar: $('ablator-current'),
+    totalProgressBar: $('ablator-total')
+  })
+
+  window.readoutTable = new ReadoutTable(datalink, 'ascension-data', [
+    {
+      label: "Altitude",
+      value: 'v.altitude',
+      formatter: function(value){ return DataFormatters.distanceString(value) }
+    },
+    {
+      label: "Height from Terrain",
+      value: 'v.heightFromTerrain',
+      formatter: function(value){
+        return DataFormatters.heightFromTerrainString(value)
+      }
+    },
+    {
+      label: "Surface Velocity",
+      value: 'v.surfaceVelocity',
+      formatter: function(value){ return DataFormatters.velocityString(value) }
+    },
+    {
+      label: "Vertical Speed",
+      value: 'v.verticalSpeed',
+      formatter: function(value){ return DataFormatters.velocityString(value) }
+    },
+  ])
+
+  })
+
+  </script>
+</body>
+</html>
